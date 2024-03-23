@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "pyrootfs"
+version = "0.1.0"
+description = "rootfs libary for python"
+authors = ["odra <me@lrossetti.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+  { include="pyrootfs", from="src/" },
+]
+
+[tool.poetry.scripts]
+pyrootfs = "pyrootfs.cli:run"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+click = "^8.1.7"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+pytest-sugar = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
