@@ -1,4 +1,7 @@
 import click
+import pathlib
+
+from . import rootfs
 
 
 @click.group
@@ -28,11 +31,15 @@ def init(path: str):
 
 @cli.command
 @click.argument('path', type=click.Path(exists=True))
-def inspect(path: str) -> None:
+@click.option('-p', '--pretty', is_flag=True, help='prints formatted json if used')
+def inspect(path: pathlib.Path, pretty: bool) -> None:
     """
     Inspect an existing rootfs in "path".
     """
-    click.echo(f'Inspecting "{path}"...')
+
+    o = rootfs.RootFS(path, rootfs.read(path))
+
+    click.echo(rootfs.to_json(o, pretty=pretty))
 
 
 @cli.command

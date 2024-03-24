@@ -15,6 +15,7 @@ pyrootfs = "pyrootfs.cli:run"
 [tool.poetry.dependencies]
 python = "^3.11"
 click = "^8.1.7"
+canonicaljson = "^2.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
