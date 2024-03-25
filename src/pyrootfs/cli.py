@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pathlib
 import shutil
@@ -6,7 +7,7 @@ import shutil
 import click
 import canonicaljson
 
-from . import rootfs
+from . import errors, rootfs
 
 
 @click.group
@@ -92,4 +93,8 @@ def snapshot(path: pathlib.Path, dest: pathlib.Path) -> None:
 
 
 def run():
-    cli()
+    try:
+        cli()
+    except errors.PyRootFSError as e:
+        click.echo(e, err=True)
+        sys.exit(e.code)
