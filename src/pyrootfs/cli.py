@@ -1,5 +1,8 @@
-import click
+import os
 import pathlib
+import shutil
+
+import click
 
 from . import rootfs
 
@@ -54,17 +57,31 @@ def diff(path1: str, path2: str) -> None:
 
 
 @cli.command
-@click.argument('path', type=click.Path(exists=True))
-@click.argument('dest', type=click.Path(exists=True))
-def snapshot(path: str, dest: str) -> None:
+@click.argument('path', type=click.Path(exists=True, path_type=pathlib.Path))
+@click.argument('dest', type=click.Path(path_type=pathlib.Path))
+def snapshot(path: pathlib.Path, dest: pathlib.Path) -> None:
     """
-    Snapshots rootfs from "path" into a directory "dest"
-    which must already exist.
+    Snapshots rootfs from "path" into a "dest" file.
 
-    The snapshot is written  as a tar.gz file and will increment
-    its filename (rootfs.$n.tar.gz) accordingly.
+    The "dest" directory tree will be created if it does not exist.
+
+    The snapshot is written as a tar file, which is why
+    it needs the "tar" cli to be available.
     """
-    click.echo(f'Snapshot "{path}" to "{dest}"')
+    if not path.is_dir():
+        return click.echo(f'{path} is not a directory', err=True)
+    if not dest.parent.is_dir():
+        os.makedirs(dest.parent.resolve(), exist_ok=True)
+    if not shutil.which('tar'):
+        return click.echo('Could not find "tar" in PATH', err=True)
+
+    o = rootfs.RootFS(path, rootfs.read(path)) 
+    proc = rootfs.archive(o, dest)
+    for out, err in proc:
+        if out is not None:
+            click.echo(out, nl=False)
+        if err is not None:
+            click.echo(err, err=True, nl=False)
 
 
 def run():

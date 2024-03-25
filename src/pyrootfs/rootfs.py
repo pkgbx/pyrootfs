@@ -4,6 +4,8 @@ rootfs utility module.
 import os
 import hashlib
 import pathlib
+import shutil
+import subprocess
 from typing import Any, Dict
 from dataclasses import dataclass, field
 
@@ -127,3 +129,34 @@ def digest(rootfs: RootFS) -> str:
     json_data = to_json(rootfs)
 
     return hashlib.sha256(json_data.encode()).hexdigest()
+
+
+def archive(rootfs: RootFS, dest: pathlib.Path) -> None:
+    """
+    Archives rootfs in a tarball to the dest folder.
+    """
+    cmd = [
+        'tar',
+        '--sort=name',
+        '--mtime=\'@0\'',
+        '--xattrs',
+        '--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime',
+        '-cvf',
+        dest.resolve(), 
+        '.'
+    ]
+    opts = {
+        'stdout': subprocess.PIPE,
+        'stderr': subprocess.PIPE,
+        'universal_newlines': True,
+        'cwd': str(rootfs.path)
+    }
+    
+    code = None
+    with subprocess.Popen(cmd, **opts) as p:
+        out, err = p.communicate()
+        yield (out, err)
+
+        code = p.returncode
+
+    return code
