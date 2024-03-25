@@ -1,8 +1,10 @@
 import os
+import json
 import pathlib
 import shutil
 
 import click
+import canonicaljson
 
 from . import rootfs
 
@@ -46,14 +48,19 @@ def inspect(path: pathlib.Path, pretty: bool) -> None:
 
 
 @cli.command
-@click.argument('path1', type=click.Path(exists=True))
-@click.argument('path2', type=click.Path(exists=True))
+@click.argument('path1', type=click.Path(exists=True, path_type=pathlib.Path))
+@click.argument('path2', type=click.Path(exists=True, path_type=pathlib.Path))
 def diff(path1: str, path2: str) -> None:
     """
     Prints the difference between two rootfs
     directories "path1" and "path2".
     """
-    click.echo(f'Comparing "{path1}" and "{path2}"...')
+    o1 = rootfs.RootFS(path1, rootfs.read(path1))
+    o2 = rootfs.RootFS(path2, rootfs.read(path2))
+
+    data = rootfs.diff(o1, o2)
+    
+    click.echo(canonicaljson.encode_pretty_printed_json(data).decode()) 
 
 
 @cli.command

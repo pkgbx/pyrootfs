@@ -10,6 +10,7 @@ from typing import Any, Dict
 from dataclasses import dataclass, field
 
 import canonicaljson
+import dictdiffer
 
 from pyrootfs import errors
 
@@ -160,3 +161,35 @@ def archive(rootfs: RootFS, dest: pathlib.Path) -> None:
         code = p.returncode
 
     return code
+
+
+def diff(rootfs1: RootFS, rootfs2: RootFS) -> Dict[str, Any]:
+    """
+    Diffs two rootfs objects and return a dict containig the difference.
+    """
+    output = {}
+    
+    for ctx, field, values in dictdiffer.diff(rootfs1.data, rootfs2.data):
+        item = output.setdefault(ctx, [])
+        
+        for value in values:
+            k, v = value
+            item.append(_diff_parse(f'{field}/{k}', v))
+    
+    return output
+
+
+def _diff_parse(field, values, p=''):
+    if not p:
+        p = f'{field}'
+        if not p.startswith('/'):
+            p = f'/{p}'
+
+    if type(values) is not dict or len(values) == 0:
+        return p
+        
+    for k, v in values.items():
+        if isinstance(v, dict):
+            return _diff_add(v, p + f'/{k}')
+        else:
+            return f'{p}/{k}' 
